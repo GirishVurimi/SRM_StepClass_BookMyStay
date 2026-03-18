@@ -1,81 +1,100 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
- * Model class representing a confirmed reservation.
+ * Custom Exception for invalid room types.
  */
-class Reservation {
-    private String bookingId;
-    private String guestName;
-    private String roomType;
-
-    public Reservation(String bookingId, String guestName, String roomType) {
-        this.bookingId = bookingId;
-        this.guestName = guestName;
-        this.roomType = roomType;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("ID: %-6s | Guest: %-10s | Room: %-10s", bookingId, guestName, roomType);
+class InvalidRoomTypeException extends Exception {
+    public InvalidRoomTypeException(String message) {
+        super(message);
     }
 }
 
 /**
- * Manages the historical record of confirmed bookings.
+ * Custom Exception for inventory-related failures.
  */
-class BookingHistory {
-    private List<Reservation> history = new ArrayList<>();
-
-    // Adds a confirmed reservation to history in insertion order
-    public void addRecord(Reservation reservation) {
-        history.add(reservation);
-    }
-
-    // Retrieves all stored reservations for review
-    public List<Reservation> getAllRecords() {
-        // Returns a copy to protect internal data integrity
-        return new ArrayList<>(history);
+class InsufficientInventoryException extends Exception {
+    public InsufficientInventoryException(String message) {
+        super(message);
     }
 }
 
 /**
- * Service to generate summaries from booking history.
+ * Domain models for Room and Reservation.
  */
-class BookingReportService {
-    public void generateSummary(BookingHistory history) {
-        List<Reservation> records = history.getAllRecords();
-        System.out.println("--- Booking Summary Report ---");
-        System.out.println("Total Bookings Confirmed: " + records.size());
+abstract class Room {
+    private String type;
+    private double price;
+    public Room(String type, double price) { this.type = type; this.price = price; }
+    public String getType() { return type; }
+    public abstract void displayFeatures();
+}
 
-        for (Reservation res : records) {
-            System.out.println(res);
+class SingleRoom extends Room {
+    public SingleRoom() { super("Single Room", 100.0); }
+    @Override public void displayFeatures() { System.out.print("1 Single Bed, Wifi, AC"); }
+}
+
+class SuiteRoom extends Room {
+    public SuiteRoom() { super("Suite Room", 350.0); }
+    @Override public void displayFeatures() { System.out.print("2 Rooms, Living Area, Ocean View"); }
+}
+
+/**
+ * Enhanced Inventory with Validation and Exception Handling.
+ */
+class RoomInventory {
+    private Map<String, Integer> inventory = new HashMap<>();
+
+    public void addRoomType(String type, int count) { inventory.put(type, count); }
+
+    public void validateAndDecrement(String type) throws InvalidRoomTypeException, InsufficientInventoryException {
+        // Case-sensitive validation
+        if (!inventory.containsKey(type)) {
+            throw new InvalidRoomTypeException("Error: The room type '" + type + "' does not exist in our system.");
         }
-        System.out.println("------------------------------");
+        if (inventory.get(type) <= 0) {
+            throw new InsufficientInventoryException("Error: No available units left for '" + type + "'.");
+        }
+        inventory.put(type, inventory.get(type) - 1);
     }
+
+    public int getCount(String type) { return inventory.getOrDefault(type, 0); }
 }
 
 /**
- * Entry point for Use Case 8: Booking History & Reporting.
- * This class demonstrates historical tracking and reporting logic.
+ * Main Class: BookMyStay (Use Case 9)
  */
 public class BookMyStay {
+
     public static void main(String[] args) {
-        // Welcome Message
         System.out.println("Welcome to the Hotel Booking Management System!");
-        System.out.println("Application: Book My Stay App");
-        System.out.println("Version: 1.0\n");
+        System.out.println("Application: Book My Stay App | Version: 9.0\n");
 
-        // Initialize Services
-        BookingHistory history = new BookingHistory();
-        BookingReportService reportService = new BookingReportService();
+        RoomInventory inventory = new RoomInventory();
+        inventory.addRoomType("Single Room", 1); // Only 1 available for testing
+        inventory.addRoomType("Suite Room", 2);
 
-        // Simulating the flow: Bookings are confirmed and added to history
-        history.addRecord(new Reservation("BK001", "Alice", "Deluxe"));
-        history.addRecord(new Reservation("BK002", "Bob", "Standard"));
-        history.addRecord(new Reservation("BK003", "Charlie", "Suite"));
+        // Scenario 1: Valid Booking
+        processBooking(inventory, "Alice", "Single Room");
 
-        // Admin requests the report
-        reportService.generateSummary(history);
+        // Scenario 2: Insufficient Inventory (Booking the last Single Room again)
+        processBooking(inventory, "Bob", "Single Room");
+
+        // Scenario 3: Invalid Room Type (Typo in "Suite")
+        processBooking(inventory, "Charlie", "Suit Room");
+    }
+
+    public static void processBooking(RoomInventory inv, String guest, String type) {
+        System.out.println("Processing request for " + guest + " (" + type + ")...");
+        try {
+            inv.validateAndDecrement(type);
+            System.out.println("SUCCESS: Reservation confirmed for " + guest + "!");
+        } catch (InvalidRoomTypeException | InsufficientInventoryException e) {
+            // Graceful failure handling with meaningful messages
+            System.err.println("VALIDATION FAILED: " + e.getMessage());
+        } finally {
+            System.out.println("Current " + type + " inventory: " + inv.getCount(type));
+            System.out.println("--------------------------------------------------");
+        }
     }
 }
