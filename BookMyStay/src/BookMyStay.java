@@ -1,7 +1,14 @@
 /**
- * Abstract class representing a generic Room.
- * Demonstrates Encapsulation and Abstraction.
+ * The BookMyStay class serves as the entry point for the
+ * Hotel Booking Management System.
+ *
+ * Version 2.0 introduces object modeling through inheritance and abstraction.
+ *
+ * @author Developer
+ * @version 2.0
  */
+
+// Abstract class representing a generalized concept
 abstract class Room {
     private String type;
     private double price;
@@ -14,12 +21,11 @@ abstract class Room {
     public String getType() { return type; }
     public double getPrice() { return price; }
 
+    // Enforcing consistent structure for subclasses
     public abstract void displayFeatures();
 }
 
-/**
- * Concrete implementations showing Inheritance.
- */
+// Concrete room classes showing inheritance
 class SingleRoom extends Room {
     public SingleRoom() { super("Single Room", 100.0); }
     @Override
@@ -38,10 +44,6 @@ class SuiteRoom extends Room {
     public void displayFeatures() { System.out.println("Features: 2 Rooms, Living Area, Wifi, AC, Ocean View"); }
 }
 
-/**
- * The BookMyStay class serves as the entry point.
- * Refactored to Version 2.0 for Use Case 2.
- */
 public class BookMyStay {
 
     public static void main(String[] args) {
@@ -49,22 +51,21 @@ public class BookMyStay {
         System.out.println("Application: Book My Stay App");
         System.out.println("Version: 2.0\n");
 
-        // Static Availability using individual variables
+        // Use Case 2: Static Availability stored using individual variables
         int singleRoomAvailability = 5;
         int doubleRoomAvailability = 3;
         int suiteRoomAvailability = 2;
 
-        // Initializing room objects and using Polymorphism
+        // Polymorphism: Handling different room implementations via the Room type
         Room[] rooms = { new SingleRoom(), new DoubleRoom(), new SuiteRoom() };
 
         System.out.println("--- Current Room Availability ---");
-
         for (Room room : rooms) {
             System.out.println("Room Type: " + room.getType());
             System.out.println("Price: $" + room.getPrice());
             room.displayFeatures();
 
-            // Displaying availability from static variables
+            // Displaying availability from static state variables
             if (room instanceof SingleRoom)
                 System.out.println("Available Units: " + singleRoomAvailability);
             else if (room instanceof DoubleRoom)
