@@ -1,14 +1,9 @@
-/**
- * The BookMyStay class serves as the entry point for the
- * Hotel Booking Management System.
- *
- * Version 2.0 introduces object modeling through inheritance and abstraction.
- *
- * @author Developer
- * @version 2.0
- */
+import java.util.HashMap;
+import java.util.Map;
 
-// Abstract class representing a generalized concept
+/**
+ * Abstract class representing a generic Room.
+ */
 abstract class Room {
     private String type;
     private double price;
@@ -21,11 +16,9 @@ abstract class Room {
     public String getType() { return type; }
     public double getPrice() { return price; }
 
-    // Enforcing consistent structure for subclasses
     public abstract void displayFeatures();
 }
 
-// Concrete room classes showing inheritance
 class SingleRoom extends Room {
     public SingleRoom() { super("Single Room", 100.0); }
     @Override
@@ -44,36 +37,73 @@ class SuiteRoom extends Room {
     public void displayFeatures() { System.out.println("Features: 2 Rooms, Living Area, Wifi, AC, Ocean View"); }
 }
 
+/**
+ * Use Case 3: Centralized Room Inventory Management using HashMap.
+ */
+class RoomInventory {
+    private Map<String, Integer> inventory;
+
+    public RoomInventory() {
+        this.inventory = new HashMap<>();
+    }
+
+    public void initializeRoom(String roomType, int count) {
+        inventory.put(roomType, count);
+    }
+
+    public int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
+    }
+
+    public void updateAvailability(String roomType, int newCount) {
+        if (inventory.containsKey(roomType)) {
+            inventory.put(roomType, newCount);
+        }
+    }
+
+    public void displayInventory() {
+        System.out.println("--- Current Room Inventory Status ---");
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue() + " units available");
+        }
+        System.out.println("-------------------------------------");
+    }
+}
+
+/**
+ * The BookMyStay class serves as the entry point for the system.
+ * Refactored to Version 3.0.
+ */
 public class BookMyStay {
 
     public static void main(String[] args) {
         System.out.println("Welcome to the Hotel Booking Management System!");
         System.out.println("Application: Book My Stay App");
-        System.out.println("Version: 2.0\n");
+        System.out.println("Version: 3.0\n");
 
-        // Use Case 2: Static Availability stored using individual variables
-        int singleRoomAvailability = 5;
-        int doubleRoomAvailability = 3;
-        int suiteRoomAvailability = 2;
+        // Step 1: Initialize Centralized Inventory
+        RoomInventory inventoryManager = new RoomInventory();
+        inventoryManager.initializeRoom("Single Room", 5);
+        inventoryManager.initializeRoom("Double Room", 3);
+        inventoryManager.initializeRoom("Suite Room", 2);
 
-        // Polymorphism: Handling different room implementations via the Room type
+        // Step 2: Initialize Room Objects
         Room[] rooms = { new SingleRoom(), new DoubleRoom(), new SuiteRoom() };
 
-        System.out.println("--- Current Room Availability ---");
+        // Step 3: Display room details and availability from HashMap
         for (Room room : rooms) {
             System.out.println("Room Type: " + room.getType());
             System.out.println("Price: $" + room.getPrice());
             room.displayFeatures();
 
-            // Displaying availability from static state variables
-            if (room instanceof SingleRoom)
-                System.out.println("Available Units: " + singleRoomAvailability);
-            else if (room instanceof DoubleRoom)
-                System.out.println("Available Units: " + doubleRoomAvailability);
-            else if (room instanceof SuiteRoom)
-                System.out.println("Available Units: " + suiteRoomAvailability);
-
+            int availableCount = inventoryManager.getAvailability(room.getType());
+            System.out.println("Available Units: " + availableCount);
             System.out.println("---------------------------------");
         }
+
+        // Example update
+        System.out.println("\nUpdating Suite Room availability...");
+        inventoryManager.updateAvailability("Suite Room", 1);
+        inventoryManager.displayInventory();
     }
 }
